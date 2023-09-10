@@ -1,0 +1,24 @@
+environment-declare:
+  jump:
+    HOST: 192.168.31.79
+    USER: yuanjie
+    PORT: 22
+    PRIVATE_KEY: ${HOME}/.ssh/id_rsa
+version: "v0.0.1"
+name: fire-demo
+default: all
+tasks:
+- name: all
+  type: task
+  sub-tasks:
+  - name: install-docker
+    use-env: jump
+
+
+dependencies:
+- "juxuny/installer:v1.0.0"
+
+replace:
+- package: juxuny/installer
+  repository: ./installer
+
