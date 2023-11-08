@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/spf13/cobra"
 )
 
@@ -21,7 +22,7 @@ func (t *listCommand) BeforeRun(cmd *cobra.Command) {
 }
 
 func (t *listCommand) Run(cmd *cobra.Command, args []string) {
-	list := t.fireInstance.GetAllowTaskList()
+	list := t.pipeline.GetAllowTaskList()
 	for _, item := range list {
 		fmt.Println(item)
 	}
