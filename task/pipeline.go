@@ -80,3 +80,8 @@ func (t *Pipeline) RunTask(name string, ctx *Context) error {
 	}
 	return selected.Exec(t.CreateContext(ctx))
 }
+
+func (t *Pipeline) Resolve() error {
+	resolver := NewResolver(t.Dependencies, t.Replace)
+	return resolver.Start()
+}

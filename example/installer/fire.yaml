@@ -2,7 +2,7 @@ version: v1.0.0
 name: installer
 tasks:
 - name: install-docker
-  type: ssh
+  type: bash
   scripts:
     - echo 'installing docker'
     - ls -lah

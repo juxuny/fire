@@ -16,9 +16,10 @@ tasks:
     - echo $PRIVATE_KEY
 
 dependencies:
-- "juxuny/installer:v1.0.0"
+  - "installer" 
 
 replace:
-- package: juxuny/installer
-  repository: ./installer
+  - package: installer
+    repository: ./installer
+
 
