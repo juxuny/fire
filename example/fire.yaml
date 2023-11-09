@@ -17,7 +17,7 @@ tasks:
 - name: hello
   type: bash
   env: jump
-  pipeline: hello
+  pipeline: firerepos/hello
 
 dependencies:
   - "firerepos/hello" 

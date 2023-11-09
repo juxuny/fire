@@ -36,6 +36,9 @@ func NewEnvProvider() EnvProvider {
 }
 
 func (t EnvProvider) Clone() EnvProvider {
+	if t == nil {
+		return NewEnvProvider()
+	}
 	result := NewEnvProvider()
 	for k, v := range t {
 		result[k] = v

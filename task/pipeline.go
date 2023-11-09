@@ -3,6 +3,7 @@ package task
 import (
 	"encoding/json"
 	"os"
+	"path"
 
 	"github.com/pkg/errors"
 	"github.com/yuanjiecloud/fire/datatype"
@@ -11,6 +12,8 @@ import (
 )
 
 type Pipeline struct {
+	configfile string
+
 	Version      Version       `json:"version,omitempty" yaml:"version,omitempty"`
 	Environments EnvProvider   `json:"environments,omitempty" yaml:"environments,omitempty"`
 	Tasks        []Task        `json:"tasks,omitempty" yaml:"tasks,omitempty"`
@@ -29,6 +32,10 @@ func Parse(file string) (c *Pipeline, err error) {
 	}
 	c = &Pipeline{}
 	err = yaml.Unmarshal(fileContent, c)
+	if err != nil {
+		return
+	}
+	c.configfile = file
 	return
 }
 
@@ -48,7 +55,8 @@ func (t *Pipeline) FindTask(taskName string) (result Task, found bool) {
 
 func (t *Pipeline) CreateContext(ctx *Context) *Context {
 	result := &Context{
-		EnvProvider: t.Environments.Clone(),
+		EnvProvider:        t.Environments.Clone(),
+		RepositoryProvider: t.CreateRepositoryProvider(),
 	}
 	if ctx != nil && ctx.EnvProvider != nil {
 		result.EnvProvider = result.EnvProvider.MergeIgnoreDuplicated(ctx.EnvProvider)
@@ -107,4 +115,8 @@ func (t *Pipeline) GetAllowTaskList() (taskList datatype.SortableStringList) {
 		}
 	}
 	return
+}
+
+func (t *Pipeline) Getwd() string {
+	return path.Dir(t.configfile)
 }

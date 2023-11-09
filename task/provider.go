@@ -11,6 +11,8 @@ import (
 type Provider struct {
 	dependencies  []string
 	replaceMapper map[string]Replacement
+
+	cacheReposMapper ReposMapper
 }
 
 func NewProvider(dependencies []string, replaceList []Replacement) (ret *Provider) {
@@ -25,7 +27,16 @@ func NewProvider(dependencies []string, replaceList []Replacement) (ret *Provide
 }
 
 func (t *Provider) FindPipeline(pipelineName string) (ret *Pipeline, err error) {
-	return nil, nil
+	mapper, err := t.GetRepositoryMapper()
+	if err != nil {
+		log.Error(err)
+		return nil, errors.Errorf("generate repository mapper failed")
+	}
+	dir, b := mapper[pipelineName]
+	if !b {
+		return nil, errors.Errorf("%s not found", pipelineName)
+	}
+	return Parse(path.Join(dir, DefaultConfigFile))
 }
 
 func (t *Provider) getRepositoryMapperFromLocal(dir string) (result ReposMapper, err error) {
@@ -51,6 +62,9 @@ func (t *Provider) getRepositoryMapperFromLocal(dir string) (result ReposMapper,
 }
 
 func (t *Provider) GetRepositoryMapper() (ret ReposMapper, err error) {
+	if t.cacheReposMapper != nil {
+		return t.cacheReposMapper, nil
+	}
 	ret = NewReposMapper()
 	for _, depend := range t.dependencies {
 		log.Debug("resolving dependency: ", depend)
@@ -94,5 +108,6 @@ func (t *Provider) GetRepositoryMapper() (ret ReposMapper, err error) {
 			ret = ret.MergeIgnoreDuplicated(mapperFromDependency)
 		}
 	}
+	t.cacheReposMapper = ret
 	return
 }

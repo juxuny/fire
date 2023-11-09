@@ -1,8 +1,11 @@
 package task
 
 import (
+	"os"
+
 	"github.com/pkg/errors"
 	"github.com/yuanjiecloud/fire/executor"
+	"github.com/yuanjiecloud/fire/log"
 )
 
 type ExecutorType string
@@ -38,7 +41,22 @@ func (t *Task) runPipeline(ctx *Context) error {
 	if t.Pipeline == "" {
 		return nil
 	}
-	return nil
+	pipeline, err := ctx.RepositoryProvider.FindPipeline(t.Pipeline)
+	if err != nil {
+		log.Fatal(err)
+	}
+	wd := Getwd()
+	err = os.Chdir(pipeline.Getwd())
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() {
+		err = os.Chdir(wd)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}()
+	return pipeline.RunAll(ctx)
 }
 
 func (t *Task) getCurrentEnv(ctx *Context) (result Environment, found bool) {

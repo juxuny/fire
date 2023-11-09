@@ -1,9 +1,10 @@
 package task
 
 type Context struct {
-	Parent      *Context
-	EnvProvider EnvProvider
-	Env         string
+	Parent             *Context
+	EnvProvider        EnvProvider
+	Env                string
+	RepositoryProvider *Provider
 }
 
 func WrapContext(parent *Context, child *Context) *Context {
