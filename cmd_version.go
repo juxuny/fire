@@ -1,9 +1,8 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
+	"github.com/yuanjiecloud/fire/log"
 )
 
 var (
@@ -23,7 +22,7 @@ func (t *versionCommand) BeforeRun(cmd *cobra.Command) {
 }
 
 func (t *versionCommand) Run(cmd *cobra.Command, args []string) {
-	fmt.Println(Version)
+	log.Info(Version)
 }
 
 func init() {
