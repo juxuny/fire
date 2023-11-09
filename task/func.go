@@ -2,6 +2,7 @@ package task
 
 import (
 	"os"
+	"os/exec"
 	"path"
 	"strings"
 
@@ -157,4 +158,29 @@ func CheckIfNestedRepository(dir string) bool {
 	}
 	basedir := path.Dir(dir)
 	return CheckIfExists(path.Join(basedir, DefaultConfigFile)) && strings.Index(dir, reposDir) == 0
+}
+
+func CheckIfGitRepository(dir string) bool {
+	return CheckIfExists(path.Join(dir, ".git"))
+}
+
+func GitFetchAndUpdate(dir string) error {
+	if !CheckIfGitRepository(dir) {
+		return errors.Errorf("invalid git repository: %v", dir)
+	}
+	wd := Getwd()
+	err := os.Chdir(dir)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() {
+		err = os.Chdir(wd)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}()
+	cmd := exec.Command("git", "pull")
+	cmd.Stderr = os.Stderr
+	cmd.Stdout = os.Stdout
+	return cmd.Run()
 }
