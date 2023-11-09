@@ -5,6 +5,8 @@ import (
 	"os"
 
 	"github.com/pkg/errors"
+	"github.com/yuanjiecloud/fire/datatype"
+	"github.com/yuanjiecloud/fire/log"
 	"gopkg.in/yaml.v3"
 )
 
@@ -33,13 +35,6 @@ func Parse(file string) (c *Pipeline, err error) {
 func (t *Pipeline) ToJson() string {
 	data, _ := json.Marshal(t)
 	return string(data)
-}
-
-func (t *Pipeline) GetAllowTaskList() (list []string) {
-	for _, item := range t.Tasks {
-		list = append(list, item.Name)
-	}
-	return
 }
 
 func (t *Pipeline) FindTask(taskName string) (result Task, found bool) {
@@ -84,4 +79,32 @@ func (t *Pipeline) RunTask(name string, ctx *Context) error {
 func (t *Pipeline) Resolve() error {
 	resolver := NewResolver(t.Dependencies, t.Replace)
 	return resolver.Start()
+}
+
+func (t *Pipeline) CreateRepositoryProvider() (repositoryProvider *Provider) {
+	repositoryProvider = NewProvider(t.Dependencies, t.Replace)
+	return
+}
+
+func (t *Pipeline) GetRepositoryMapper() (mapper ReposMapper, err error) {
+	return t.CreateRepositoryProvider().GetRepositoryMapper()
+}
+
+func (t *Pipeline) GetAllowTaskList() (taskList datatype.SortableStringList) {
+	if t == nil {
+		return make(datatype.SortableStringList, 0)
+	}
+	repositoryProvider := t.CreateRepositoryProvider()
+	for _, item := range t.Tasks {
+		taskList = append(taskList, item.Name)
+		if item.Pipeline != "" {
+			pipeline, err := repositoryProvider.FindPipeline(item.Pipeline)
+			if err != nil {
+				log.Error(err)
+				continue
+			}
+			taskList = append(taskList, pipeline.GetAllowTaskList()...)
+		}
+	}
+	return
 }

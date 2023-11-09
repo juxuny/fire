@@ -14,12 +14,11 @@ tasks:
     - env
     - ls -lha
     - echo $PRIVATE_KEY
+- name: hello
+  type: bash
+  env: jump
+  pipeline: hello
 
 dependencies:
-  - "installer" 
-
-replace:
-  - package: installer
-    repository: ./installer
-
+  - "firerepos/hello" 
 

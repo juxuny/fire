@@ -1,5 +1,7 @@
 package task
 
 const (
-	DefaultConfigFile = "fire.yaml"
+	DefaultConfigFile    = "fire.yaml"
+	DefaultNamespace     = "firerepos"
+	DefaultVersionBranch = "main"
 )

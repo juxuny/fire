@@ -5,8 +5,14 @@ import (
 	"os"
 )
 
+var (
+	Verbose = false
+)
+
 func Debug(data ...interface{}) {
-	fmt.Println(data...)
+	if Verbose {
+		fmt.Println(data...)
+	}
 }
 
 func Fatal(data ...interface{}) {

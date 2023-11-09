@@ -99,3 +99,62 @@ func CheckIfExists(filePath string) bool {
 	_, err := os.Stat(filePath)
 	return err == nil
 }
+
+func Getwd() string {
+	wd, err := os.Getwd()
+	if err != nil {
+		log.Fatal(err)
+	}
+	return wd
+}
+
+func CreateRepositoryLocation(namespace, repositoryName string) string {
+	if repositoryName == "" {
+		log.Fatal("invalid repository name: ", repositoryName)
+	}
+	globalReposDir, err := GetGlobalReposDir()
+	if err != nil {
+		log.Fatal(err)
+	}
+	l := []string{globalReposDir}
+	if namespace == "" {
+		l = append(l, DefaultNamespace)
+	} else {
+		l = append(l, namespace)
+	}
+	l = append(l, repositoryName)
+	return path.Join(l...)
+}
+
+func CreateRepositoryLocationSpecificVersion(namespace, repositoryName, version string) string {
+	if repositoryName == "" {
+		log.Fatal("invalid repository name: ", repositoryName)
+	}
+	globalReposDir, err := GetGlobalReposDir()
+	if err != nil {
+		log.Fatal(err)
+	}
+	l := []string{globalReposDir}
+	if namespace == "" {
+		l = append(l, DefaultNamespace)
+	} else {
+		l = append(l, namespace)
+	}
+	l = append(l, repositoryName)
+	if version == "" {
+		l = append(l, DefaultVersionBranch)
+	} else {
+		l = append(l, version)
+	}
+	return path.Join(l...)
+}
+
+func CheckIfNestedRepository(dir string) bool {
+	reposDir, err := GetGlobalReposDir()
+	if err != nil {
+		log.Fatal(err)
+		return false
+	}
+	basedir := path.Dir(dir)
+	return CheckIfExists(path.Join(basedir, DefaultConfigFile)) && strings.Index(dir, reposDir) == 0
+}

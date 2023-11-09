@@ -70,20 +70,17 @@ func (t *Resolver) checkout(repositoryUrl string, namespace, name, branch string
 	return t.resolveDirectory(path.Join(repositoryPath, namespace, name, branch))
 }
 
-func (t *Resolver) fetchAndUpdate(namespace string, name string, branch string, repositoryPath string) error {
-	return nil
-}
-
 func (t *Resolver) resolveDirectory(dir string) error {
-	wd, err := os.Getwd()
+	wd := Getwd()
+	err := os.Chdir(dir)
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = os.Chdir(dir)
-	if err != nil {
-		log.Fatal(err)
+	if path.IsAbs(dir) {
+		log.Info("enter dir: ", dir)
+	} else {
+		log.Info("enter dir: ", path.Join(wd, dir))
 	}
-	log.Info("enter dir: ", dir)
 	defer func() {
 		err = os.Chdir(wd)
 		if err != nil {

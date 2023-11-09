@@ -11,6 +11,7 @@ import (
 type contextCommand struct {
 	configFile string
 	workdir    string
+	verbose    bool
 
 	pipeline *task.Pipeline
 }
@@ -22,9 +23,11 @@ func (t *contextCommand) InitFlag(cmd *cobra.Command) {
 	}
 	cmd.PersistentFlags().StringVarP(&t.configFile, "config", "c", "fire.yaml", "config file name")
 	cmd.PersistentFlags().StringVarP(&t.workdir, "workdir", "w", workdir, "working directory")
+	cmd.PersistentFlags().BoolVarP(&t.verbose, "verbose", "v", false, "display debug log")
 }
 
 func (t *contextCommand) BeforeRun(cmd *cobra.Command) {
+	log.Verbose = t.verbose
 	var err error
 	err = os.Chdir(t.workdir)
 	if err != nil {
@@ -35,5 +38,15 @@ func (t *contextCommand) BeforeRun(cmd *cobra.Command) {
 	if err != nil {
 		log.Fatal(err)
 	}
+	globalConfigPath, err := task.GetGlobalCacheDir()
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Debug("global config path: ", globalConfigPath)
+	globalReposDir, err := task.GetGlobalReposDir()
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Debug("global repos dir: ", globalReposDir)
 	log.Debug(t.pipeline.ToJson())
 }
