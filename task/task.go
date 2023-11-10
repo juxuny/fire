@@ -16,12 +16,13 @@ const (
 )
 
 type Task struct {
-	Name         string        `json:"name,omitempty" yaml:"name,omitempty"`
-	Environments Environment   `json:"environments,omitempty" yaml:"environments,omitempty"`
-	Type         executor.Type `json:"type,omitempty" yaml:"type,omitempty"`
-	Env          string        `json:"env,omitempty" yaml:"env,omitempty"`
-	Pipeline     string        `json:"pipeline,omitempty" yaml:"pipeline,omitempty"`
-	Scripts      []string      `json:"scripts,omitempty" yaml:"scripts,omitempty"`
+	Name         string               `json:"name,omitempty" yaml:"name,omitempty"`
+	Environments Environment          `json:"environments,omitempty" yaml:"environments,omitempty"`
+	Type         executor.Type        `json:"type,omitempty" yaml:"type,omitempty"`
+	Env          string               `json:"env,omitempty" yaml:"env,omitempty"`
+	Pipeline     string               `json:"pipeline,omitempty" yaml:"pipeline,omitempty"`
+	Scripts      []string             `json:"scripts,omitempty" yaml:"scripts,omitempty"`
+	SshOptions   *executor.SshOptions `json:"sshOptions,omitempty" yaml:"ssh-options,omitempty"`
 }
 
 func (t *Task) Exec(ctx *Context) error {
@@ -92,6 +93,8 @@ func (t *Task) runScripts(ctx *Context) (err error) {
 	}
 	if t.Type == executor.TypeBash {
 		return executor.NewBashExecutor(env, t.Scripts).StartAndWait()
+	} else if t.Type == executor.TypeSsh {
+		return executor.NewSshExecutor(env, t.Scripts, t.SshOptions).StartAndWait()
 	} else {
 		return errors.Errorf("unknown executor type: %v", t.Type)
 	}

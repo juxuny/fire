@@ -18,6 +18,13 @@ tasks:
   type: bash
   env: jump
   pipeline: firerepos/hello
+- name: remote
+  type: ssh
+  ssh-options:
+    host: nuc
+  env: jump
+  scripts:
+    - ls -lha
 
 dependencies:
   - "firerepos/hello" 
