@@ -23,7 +23,7 @@ func (t *installCommand) BeforeRun(cmd *cobra.Command) {
 func (t *installCommand) Run(cmd *cobra.Command, args []string) {
 	err := t.pipeline.Resolve()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("resolve error: ", err)
 	}
 	log.Info("Success")
 }

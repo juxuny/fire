@@ -1,6 +1,7 @@
 package task
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"path"
@@ -15,6 +16,10 @@ var (
 	globalReposDir   string
 	globalFireConfig string
 )
+
+func GetGlobalConfigDir() (fireConfigDir string, err error) {
+	return GetGlobalCacheDir()
+}
 
 func GetGlobalCacheDir() (fireCacheDir string, err error) {
 	if globalCacheDir != "" {
@@ -183,4 +188,18 @@ func GitFetchAndUpdate(dir string) error {
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
 	return cmd.Run()
+}
+
+func showTitle(title string) {
+	holder := []byte("==========================================================================")
+	titleData := []byte(fmt.Sprintf(" %s ", title))
+	offset := (len(holder) - len(title)) / 2
+	if offset < 0 {
+		log.Info(title)
+	} else {
+		for i := 0; i < len(titleData); i++ {
+			holder[i+offset] = titleData[i]
+		}
+		log.Info(string(holder))
+	}
 }

@@ -2,6 +2,7 @@ package task
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path"
 
@@ -68,15 +69,21 @@ func (t *Pipeline) RunAll(ctx *Context) error {
 	var err error
 	newContext := t.CreateContext(ctx)
 	for _, item := range t.Tasks {
+		showTitle(fmt.Sprintf("start task: %s", item.Name))
 		err = item.Exec(newContext)
 		if err != nil {
 			return err
 		}
+		showTitle(fmt.Sprintf("end(%s)", item.Name))
 	}
 	return nil
 }
 
 func (t *Pipeline) RunTask(name string, ctx *Context) error {
+	showTitle(fmt.Sprintf("start task: %s", name))
+	defer func() {
+		showTitle(fmt.Sprintf("end(%s)", name))
+	}()
 	selected, found := t.FindTask(name)
 	if !found {
 		return errors.Errorf("task not found: %s", name)
