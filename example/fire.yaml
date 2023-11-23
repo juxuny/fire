@@ -4,6 +4,10 @@ environments:
     USER: yuanjie
     PORT: 22
     PRIVATE_KEY: ${HOME}/.ssh/id_rsa
+  gw:
+    HOST: 192.168.31.71
+    USER: gateway
+    PORT: 2202
 version: "v0.0.1"
 name: fire-demo
 tasks:
@@ -17,7 +21,7 @@ tasks:
 - name: hello
   type: bash
   env: jump
-  pipeline: firerepos/hello
+  pipeline: firerepos/hello@v1.0.0
 - name: remote
   type: ssh
   ssh-options:
@@ -25,7 +29,14 @@ tasks:
   env: jump
   scripts:
     - ls -lha
+- name: installer
+  pipeline: installer
+  env: gw
 
 dependencies:
-  - "firerepos/hello" 
+  - "firerepos/hello@v1.0.0" 
+  - "installer"
 
+replace:
+  - package: "installer"
+    repository: ./installer

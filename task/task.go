@@ -26,6 +26,7 @@ type Task struct {
 }
 
 func (t *Task) Exec(ctx *Context) error {
+	log.Debug("context env: ", ctx.GetCurrentEnv())
 	var err error
 	err = t.runPipeline(ctx)
 	if err != nil {
@@ -42,9 +43,11 @@ func (t *Task) runPipeline(ctx *Context) error {
 	if t.Pipeline == "" {
 		return nil
 	}
-	pipeline, err := ctx.RepositoryProvider.FindPipeline(t.Pipeline)
-	if err != nil {
-		log.Fatal(err)
+	var err error
+	log.Debug("start pipeline: ", t.Pipeline)
+	pipeline, found := FindPipeline(t.Pipeline)
+	if !found {
+		return errors.Errorf("pipeline not found: %s", t.Pipeline)
 	}
 	wd := Getwd()
 	err = os.Chdir(pipeline.Getwd())
@@ -66,8 +69,9 @@ func (t *Task) getCurrentEnv(ctx *Context) (result Environment, found bool) {
 	} else {
 		result = make(Environment)
 	}
-	if ctx.Env != "" {
-		env, b := ctx.GetEnv(ctx.Env)
+	currentEnv := ctx.GetCurrentEnv()
+	if currentEnv != "" {
+		env, b := ctx.GetEnv(currentEnv)
 		if b {
 			result = result.MergeIgnoreDuplicated(env)
 			found = true

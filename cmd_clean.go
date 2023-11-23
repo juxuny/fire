@@ -21,27 +21,20 @@ func (t *cleanCommand) InitFlag(cmd *cobra.Command) {
 
 func (t *cleanCommand) BeforeRun(cmd *cobra.Command) {
 	t.contextCommand.BeforeRun(cmd)
+	err := t.pipeline.Preload()
+	log.CheckAndFatal(err)
 }
 
 func (t *cleanCommand) Run(cmd *cobra.Command, args []string) {
 	log.Info("cleaning...")
-	mapper, err := t.pipeline.GetRepositoryMapper()
-	if err != nil {
-		log.Fatal(err)
-	}
-	list := mapper.GetKeys()
-	for _, name := range list {
-		if task.CheckIfNestedRepository(mapper[name]) {
-			log.Debug("ignore nested repository:", mapper[name])
-			continue
-		}
-		log.Info("clean repository: ", name, " => ", mapper[name])
-		if task.CheckIfExists(mapper[name]) {
-			err = os.RemoveAll(mapper[name])
-			if err != nil {
-				log.Fatal(err)
-			}
-		}
+	if t.global {
+		dir, err := task.GetGlobalReposDir()
+		log.CheckAndFatal(err)
+		err = os.RemoveAll(dir)
+		log.CheckAndFatal(err)
+	} else {
+		err := t.pipeline.CleanDependencies()
+		log.CheckAndFatal(err)
 	}
 }
 

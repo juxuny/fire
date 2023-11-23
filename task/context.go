@@ -1,10 +1,12 @@
 package task
 
+import "github.com/yuanjiecloud/fire/log"
+
 type Context struct {
-	Parent             *Context
-	EnvProvider        EnvProvider
-	Env                string
-	RepositoryProvider *Provider
+	Parent      *Context
+	EnvProvider EnvProvider
+	Env         string
+	WorkDir     string
 }
 
 func WrapContext(parent *Context, child *Context) *Context {
@@ -12,7 +14,20 @@ func WrapContext(parent *Context, child *Context) *Context {
 	return child
 }
 
+func (t *Context) Clone() *Context {
+	if t == nil {
+		return nil
+	}
+	return &Context{
+		Parent:      t.Parent,
+		EnvProvider: t.EnvProvider.Clone(),
+		Env:         t.Env,
+		WorkDir:     t.WorkDir,
+	}
+}
+
 func (t *Context) GetEnv(name string) (env Environment, found bool) {
+	log.Debug("query: ", name)
 	env, found = t.EnvProvider[name]
 	if !found && t.Parent != nil {
 		return t.Parent.GetEnv(name)
@@ -20,6 +35,21 @@ func (t *Context) GetEnv(name string) (env Environment, found bool) {
 	return
 }
 
-func (t *Context) RunTask(name string) error {
-	return nil
+func (t *Context) GetCurrentEnv() string {
+	if t == nil {
+		return ""
+	}
+	if t.Parent != nil {
+		return t.Parent.GetCurrentEnv()
+	}
+	return t.Env
+}
+
+func (t *Context) UseEnv(env string) *Context {
+	if t == nil {
+		return nil
+	}
+	result := t.Clone()
+	result.Env = env
+	return result
 }

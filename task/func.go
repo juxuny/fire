@@ -156,13 +156,8 @@ func CreateRepositoryLocationSpecificVersion(namespace, repositoryName, version 
 }
 
 func CheckIfNestedRepository(dir string) bool {
-	reposDir, err := GetGlobalReposDir()
-	if err != nil {
-		log.Fatal(err)
-		return false
-	}
 	basedir := path.Dir(dir)
-	return CheckIfExists(path.Join(basedir, DefaultConfigFile)) && strings.Index(dir, reposDir) == 0
+	return CheckIfExists(path.Join(basedir, DefaultConfigFile))
 }
 
 func CheckIfGitRepository(dir string) bool {

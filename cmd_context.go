@@ -11,9 +11,10 @@ import (
 )
 
 type contextCommand struct {
-	workdir string
-	verbose bool
-	global  bool
+	workdir    string
+	verbose    bool
+	printStack bool
+	global     bool
 
 	pipeline *task.Pipeline
 }
@@ -26,10 +27,12 @@ func (t *contextCommand) InitFlag(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringVarP(&t.workdir, "workdir", "w", workdir, "working directory")
 	cmd.PersistentFlags().BoolVarP(&t.verbose, "verbose", "v", false, "display debug log")
 	cmd.PersistentFlags().BoolVarP(&t.global, "global", "g", false, "use global config")
+	cmd.PersistentFlags().BoolVar(&t.printStack, "printstack", false, "print call stack")
 }
 
 func (t *contextCommand) BeforeRun(cmd *cobra.Command) {
 	log.Verbose = t.verbose
+	log.PrintStack = t.printStack
 	globalConfigPath, err := task.GetGlobalCacheDir()
 	if err != nil {
 		log.Fatal(err)
@@ -61,9 +64,8 @@ func (t *contextCommand) BeforeRun(cmd *cobra.Command) {
 		if err != nil {
 			log.Fatal("use global config error:", err)
 		}
-		configFile = path.Join(globalConfigDir, task.DefaultConfigFile)
 	}
-	t.pipeline, err = task.Parse(configFile)
+	t.pipeline, err = task.Parse(task.DefaultConfigFile)
 	if err != nil {
 		log.Fatal(err)
 	}

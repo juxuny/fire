@@ -3,7 +3,6 @@ package main
 import (
 	"github.com/spf13/cobra"
 	"github.com/yuanjiecloud/fire/log"
-	"github.com/yuanjiecloud/fire/task"
 )
 
 type updateCommand struct {
@@ -19,29 +18,13 @@ func (t *updateCommand) InitFlag(cmd *cobra.Command) {
 
 func (t *updateCommand) BeforeRun(cmd *cobra.Command) {
 	t.contextCommand.BeforeRun(cmd)
+	err := t.pipeline.Preload()
+	log.CheckAndFatal(err)
 }
 
 func (t *updateCommand) Run(cmd *cobra.Command, args []string) {
-	mapper, err := t.pipeline.CreateRepositoryProvider().GetRepositoryMapper()
-	if err != nil {
-		log.Fatal(err)
-	}
-	keys := mapper.GetKeys()
-	for _, k := range keys {
-		repositoryDir, b := mapper[k]
-		if !b {
-			continue
-		}
-		if task.CheckIfGitRepository(repositoryDir) {
-			log.Info("update: ", repositoryDir)
-			err = task.GitFetchAndUpdate(repositoryDir)
-			if err != nil {
-				log.Fatal(err)
-			}
-		} else {
-			log.Info("ignore local repository dir: ", repositoryDir)
-		}
-	}
+	log.Info("recommend use clean and install")
+	// t.pipeline.UpdateDependencies()
 }
 
 func init() {

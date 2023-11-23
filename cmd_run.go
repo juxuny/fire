@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	"github.com/yuanjiecloud/fire/log"
 )
 
 type runCommand struct {
@@ -38,6 +39,12 @@ func (t *runCommand) Prepare(cmd *cobra.Command) {
 func (t *runCommand) InitFlag(cmd *cobra.Command) {
 	t.contextCommand.InitFlag(cmd)
 	cmd.PersistentFlags().StringVarP(&t.taskName, "task", "t", "", "task name")
+}
+
+func (t *runCommand) BeforeRun(cmd *cobra.Command) {
+	t.contextCommand.BeforeRun(cmd)
+	err := t.pipeline.Preload()
+	log.CheckAndFatal(err)
 }
 
 func init() {

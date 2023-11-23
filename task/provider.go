@@ -8,106 +8,45 @@ import (
 	"github.com/yuanjiecloud/fire/log"
 )
 
-type Provider struct {
-	dependencies  []string
-	replaceMapper map[string]Replacement
+var mapFromPipelineToLocation = make(map[string]string)
+var pipelineMapper = make(map[string]*Pipeline)
 
-	cacheReposMapper ReposMapper
-}
-
-func NewProvider(dependencies []string, replaceList []Replacement) (ret *Provider) {
-	ret = &Provider{
-		dependencies:  dependencies,
-		replaceMapper: make(map[string]Replacement),
-	}
-	for _, replace := range replaceList {
-		ret.replaceMapper[replace.Package] = replace
-	}
-	return
-}
-
-func (t *Provider) FindPipeline(pipelineName string) (ret *Pipeline, err error) {
-	mapper, err := t.GetRepositoryMapper()
-	if err != nil {
-		log.Error(err)
-		return nil, errors.Errorf("generate repository mapper failed")
-	}
-	dir, b := mapper[pipelineName]
-	if !b {
-		return nil, errors.Errorf("%s not found", pipelineName)
-	}
-	return Parse(path.Join(dir, DefaultConfigFile))
-}
-
-func (t *Provider) getRepositoryMapperFromLocal(dir string) (result ReposMapper, err error) {
-	wd := Getwd()
-	err = os.Chdir(dir)
+func AddPipeline(pipelineWithVersion string, dir string) (*Pipeline, error) {
+	workdirBackup := Getwd()
+	err := os.Chdir(dir)
 	if err != nil {
 		log.Fatal(err)
 	}
 	log.Debug("enter dir: ", dir)
 	defer func() {
-		err = os.Chdir(wd)
+		err = os.Chdir(workdirBackup)
 		if err != nil {
 			log.Fatal(err)
 		}
-		log.Debug("goback: ", wd)
+		log.Debug("goback: ", workdirBackup)
 	}()
-	pipeline, err := Parse(DefaultConfigFile)
+	configFile := path.Join(dir, DefaultConfigFile)
+	pipeline, err := Parse(configFile)
 	if err != nil {
-		log.Error(err)
-		return nil, errors.Errorf("invalid repository dir: %v", dir)
+		return nil, errors.Errorf("invalid fire project: %s", dir)
 	}
-	return pipeline.GetRepositoryMapper()
+	log.Debug("add pipeline: ", pipelineWithVersion, " => ", dir)
+	mapFromPipelineToLocation[pipelineWithVersion] = dir
+	pipelineMapper[pipelineWithVersion] = pipeline
+	return pipeline, nil
 }
 
-func (t *Provider) GetRepositoryMapper() (ret ReposMapper, err error) {
-	if t.cacheReposMapper != nil {
-		return t.cacheReposMapper, nil
-	}
-	ret = NewReposMapper()
-	for _, depend := range t.dependencies {
-		log.Debug("resolving dependency: ", depend)
-		var namespace, name, version string
-		namespace, name, version, err = SplitPackageName(depend)
-		if err != nil {
-			log.Fatal("invalid repository:", depend)
-			return
-		}
-		replacement, b := t.replaceMapper[name]
-		if b {
-			if replacement.IsLocal() {
-				repositoryDir := path.Join(Getwd(), replacement.Repository)
-				var mapperFromDependency ReposMapper
-				mapperFromDependency, err = t.getRepositoryMapperFromLocal(repositoryDir)
-				if err != nil {
-					return
-				}
-				ret[depend] = repositoryDir
-				ret = ret.MergeIgnoreDuplicated(mapperFromDependency)
-			} else {
-				repositoryDir := CreateRepositoryLocationSpecificVersion(namespace, name, replacement.Version.String())
-				var mapperFromDependency ReposMapper
-				mapperFromDependency, err = t.getRepositoryMapperFromLocal(repositoryDir)
-				if err != nil {
-					return
-				}
-				ret[depend] = repositoryDir
-				ret = ret.MergeIgnoreDuplicated(mapperFromDependency)
-			}
-		} else {
-			log.Debug("no replacement dependency: ", name)
-			// use default location
-			repositoryDir := CreateRepositoryLocationSpecificVersion(namespace, name, version)
-			var mapperFromDependency ReposMapper
-			mapperFromDependency, err = t.getRepositoryMapperFromLocal(repositoryDir)
-			if err != nil {
-				return
-			}
-			ret[depend] = repositoryDir
-			ret = ret.MergeIgnoreDuplicated(mapperFromDependency)
-		}
-	}
-	t.cacheReposMapper = ret
+func FindPipeline(pipelineWithVersion string) (pipeline *Pipeline, found bool) {
+	pipeline, found = pipelineMapper[pipelineWithVersion]
+	return
+}
+
+func CheckIfContainPipeline(pipelineWithVersion string) bool {
+	_, found := pipelineMapper[pipelineWithVersion]
+	return found
+}
+
+func FindPipelineReposDir(pipelineWithVersion string) (dir string, found bool) {
+	dir, found = mapFromPipelineToLocation[pipelineWithVersion]
 	return
 }

@@ -2,11 +2,14 @@ package log
 
 import (
 	"fmt"
+	"log"
 	"os"
+	"runtime/debug"
 )
 
 var (
-	Verbose = false
+	Verbose    = false
+	PrintStack = false
 )
 
 func Debug(data ...interface{}) {
@@ -17,6 +20,7 @@ func Debug(data ...interface{}) {
 
 func Fatal(data ...interface{}) {
 	fmt.Println(data...)
+	debug.PrintStack()
 	os.Exit(-1)
 }
 
@@ -25,4 +29,10 @@ func Error(data ...interface{}) {
 }
 func Info(data ...interface{}) {
 	fmt.Println(data...)
+}
+
+func CheckAndFatal(err error) {
+	if err != nil {
+		log.Fatal(err)
+	}
 }

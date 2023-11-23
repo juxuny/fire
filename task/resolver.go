@@ -96,6 +96,7 @@ func (t *Resolver) resolveDirectory(dir string) error {
 		log.Fatal("invalid repository, ", err)
 		return errors.Errorf("invalid repository")
 	}
+	log.Debug("start resolving dependency pipeline: ", path.Join(dir, DefaultConfigFile))
 	return pipeline.Resolve()
 }
 
@@ -104,6 +105,7 @@ func (t *Resolver) Start() error {
 	if err != nil {
 		log.Fatal(err)
 	}
+	log.Debug("dependencies count: ", len(t.dependencies))
 	for _, depend := range t.dependencies {
 		var (
 			namespace string
@@ -111,7 +113,12 @@ func (t *Resolver) Start() error {
 			version   string
 			err       error
 		)
-		log.Info("resolving", depend)
+		if globalResolverFilter.Contains(depend) {
+			log.Debug("ignore dependency: ", depend)
+			continue
+		}
+		globalResolverFilter.Add(depend)
+		log.Info("resolving: ", depend)
 		replacement, found := t.replaceMapper[depend]
 		if found {
 			namespace, name, _, err = SplitPackageName(replacement.Package)
@@ -121,6 +128,7 @@ func (t *Resolver) Start() error {
 			}
 			version = replacement.Version.String()
 			if replacement.IsLocal() {
+				log.Debug("detected a local repos: ", depend)
 				if CheckIfExists(replacement.Repository) {
 					log.Info("ignore local repository: ", depend)
 					err = t.resolveDirectory(replacement.Repository)

@@ -1,8 +1,6 @@
-version: v1.0.0
-name: installer
 tasks:
 - name: install-docker
   type: bash
   scripts:
-    - echo 'installing docker'
-    - ls -lah
+  - ls -lha
+  - env
