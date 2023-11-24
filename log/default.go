@@ -20,7 +20,9 @@ func Debug(data ...interface{}) {
 
 func Fatal(data ...interface{}) {
 	fmt.Println(data...)
-	debug.PrintStack()
+	if PrintStack {
+		debug.PrintStack()
+	}
 	os.Exit(-1)
 }
 
